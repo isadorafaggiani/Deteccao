@@ -2,7 +2,8 @@
 Diretório destinado ao projeto da Iniciação Científica "Eye Tracking para auxiliar no diagnóstico de crianças com TEA".
 
 <p align="center">
-  <img src="Arkanoid.png">
+  <img src="![EyeTrackingGIT](https://user-images.githubusercontent.com/83316271/125211760-03f45400-e27f-11eb-89fd-7da2842936c1.jpeg)
+">
 </p>
 
 ## Descrição
