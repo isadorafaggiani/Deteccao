@@ -1,11 +1,6 @@
 # Eye Tracking 
 Diretório destinado ao projeto da Iniciação Científica "Eye Tracking para auxiliar no diagnóstico de crianças com TEA".
 
-<p align="center">
-  <img src="![EyeTrackingGIT](https://user-images.githubusercontent.com/83316271/125211760-03f45400-e27f-11eb-89fd-7da2842936c1.jpeg)
-">
-</p>
-
 ## Descrição
 O objetivo do projeto é auxilar no diagnosticos de crianças por meio do rastreamento e obtenção de dados da pupila do paciente, uma vez que o programa fornece um ** sistema de rastreamento ocular baseado em webcam ** e com isso é posível dar a posição exata das pupilas e a direção do olhar em tempo real. 
 
@@ -27,20 +22,20 @@ Clone o projeto:
 https://github.com/isadorafaggiani/Deteccao.git
 ```
 
-Install these dependencies (NumPy, OpenCV, Dlib):
+Instale as dependências (NumPy, OpenCV, Dlib):
 
 ```
 pip install -r requirements.txt
 ```
 
 
-Run the demo:
+Run:
 
 ```
 python example.py
 ```
 
-## Simple Demo
+## Projeto na forma basica
 
 ```python
 import cv2
@@ -70,17 +65,9 @@ while True:
         break
 ```
 
-## Documentation
+## Documentação
 
-In the following examples, `gaze` refers to an instance of the `GazeTracking` class.
-
-### Refresh the frame
-
-```python
-gaze.refresh(frame)
-```
-
-Pass the frame to analyze (numpy.ndarray). If you want to work with a video stream, you need to put this instruction in a loop, like the example above.
+Alguns exemplos são encontrados na classe "GazeTracking". Lá é possível compreender melhor o funcionamento do código.
 
 ### Posição da pupila esquerda
 
