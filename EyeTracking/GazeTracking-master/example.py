@@ -1,29 +1,39 @@
 import time
 import cv2
-import datetime
+#import datetime
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 from gaze_tracking import GazeTracking
-import seaborn as sns; sns.set_theme()
-import tkinter
+import seaborn as sns;
+
+sns.set_theme()
+#import tkinter
+import plotly.express as px
 from tkinter import *
 
-root =Tk()
-root.title ('EYE TRACKING')
-root.geometry ('300x200')
-root.configure(background= "#BDE8EF")
+
+root = Tk()
+root.title('EYE TRACKING')
+root.geometry('300x200')
+root.configure(background="#BDE8EF")
+# root.withdraw() # verificar se eh necessario
+SCREEN_WIDTH, SCREEN_HEIGHT = root.winfo_screenwidth(), root.winfo_screenheight()
+# print(f'SCREEN_WIDTH = {SCREEN_WIDTH}')
+# print(f'SCREEN_HEIGHT = {SCREEN_HEIGHT}')
 
 var = False
+
 
 def botao():
     global var
     var = True
     root.quit()
 
-start_btnRedondo = PhotoImage(file='button.png' )
-img_label = Button (image = start_btnRedondo, background= "#BDE8EF", borderwidth = 0, command = botao)
-img_label.pack (pady = 30)
+
+start_btnRedondo = PhotoImage(file='button.png')
+img_label = Button(image=start_btnRedondo, background="#BDE8EF", borderwidth=0, command=botao)
+img_label.pack(pady=30)
 root.mainloop()
 
 coords = []
@@ -35,6 +45,8 @@ time_results = []
 res = 0
 contador = 0
 temp_ini = time.time()  # tempo que começa o programa
+contadorRight = 0
+contadorLeft = 0
 
 if var == True:
     while True:
@@ -55,67 +67,54 @@ if var == True:
             text = "Blinking"
         elif gaze.is_right():
             text = "Looking right"
+            contadorRight += 1
+
+
         elif gaze.is_left():
             text = "Looking left"
+            contadorLeft += 1
+
+
         elif gaze.is_center():
             text = "Looking center"
 
         cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
-        left_pupil = gaze.pupil_left_coords()
-        right_pupil = gaze.pupil_right_coords()
-        cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_DUPLEX, 0.9,
-                    (147, 58, 31), 1)
-        cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_DUPLEX, 0.9,
-                    (147, 58, 31), 1)
+        gaze_x = gaze.horizontal_ratio()
+        gaze_y = gaze.vertical_ratio()
+
         if res >= 0.2:
             contador = contador + 200
-            if left_pupil != None and right_pupil != None:
-                coords.append([pd.Timedelta(milliseconds=contador), left_pupil[0], left_pupil[1], right_pupil[0],
-                               right_pupil[1]])
+            if gaze_x != None and gaze_y != None:
+                gaze_x = int(gaze_x * SCREEN_WIDTH)
+                gaze_y = int(gaze_y * SCREEN_HEIGHT)
+                cv2.putText(frame, "Coords: " + str(gaze_x) + "," + str(gaze_y), (90, 130), cv2.FONT_HERSHEY_DUPLEX,
+                            0.9, (147, 58, 31), 1)
+                coords.append([pd.Timedelta(milliseconds=contador), gaze_x, gaze_y])
             else:
-                print(f'valor nulo detectado -> esq:{left_pupil}\tdir:{right_pupil}')
+                print('valor nulo detectado -> x:{gaze_x}\tdir:{gaze_y}')
             temp_ini = ini
-            print(f'contador: {contador}')
-        print(f'res:{res} temp_ini:{temp_ini} ini:{ini}')
+            print('contador: {contador}')
+        print('res:{res} temp_ini:{temp_ini} ini:{ini}')
         cv2.imshow("Demo", frame)
-
         if cv2.waitKey(1) == 27:
             break
-        # time.sleep (1)#delay de 1s
 
-    # prepare data to be saved
-    df = pd.DataFrame(coords, columns=['time', 'left_pupil_x', 'left_pupil_y', 'right_pupil_x', 'right_pupil_y'])
-    # df = pd.DataFrame(time_results, columns= ['tempo'])
 
-    # save data to filesystem
-    # df.to_csv('coords.csv', index=False)
+    # time.sleep (1)#delay de 1s
 
-    colors = np.random.rand(len(df.index))
 
-    # uniform_data = np.random.rand(10,12)
-    # ax = sns.heatmap(uniform_data, center = 0)
-    # df = sns.load_dataset('df')
-    # df = df.pivot('left_pupil', 'time','temp')
-    # ax = sns.heatmap(df)
-
-    # uniform_data = np.random.rand(10, 12)
-    # ax = sns.heatmap(uniform_data, vmin=0, vmax=1)
-    # plt.scatter(df['left_pupil_x'], df['left_pupil_y'], c=colors, alpha=0.5)
-    # plt.title('left_pupil')
-    # plt.show()
-
-    df = pd.read_csv('coords.csv')
-
-    import plotly.express as px
-
-    fig = px.density_heatmap(df, x="left_pupil_x", y="left_pupil_x")
+    df = pd.DataFrame(coords, columns=['time', 'gaze_x', 'gaze_y'])
+    colors = np.random.rand(len(coords))
+    fig = px.density_heatmap(df, x="gaze_x", y="gaze_y", nbinsx = 50, nbinsy=50)
     fig.show()
 
-    fig = px.density_heatmap(df, x="right_pupil_x", y="right_pupil_y")
+    import plotly.graph_objects  as  go
+
+    labels = ['Left_Gaze', 'Right_Gaze']
+    values = [contadorLeft, contadorRight]
+
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
     fig.show()
 
-else :
+else:
     print("nao roda")
-
-
-

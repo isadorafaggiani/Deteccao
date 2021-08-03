@@ -55,7 +55,6 @@ class GazeTracking(object):
 
     def refresh(self, frame):
         """Refreshes the frame and analyzes it.
-
         Arguments:
             frame (numpy.ndarray): The frame to analyze
         """
