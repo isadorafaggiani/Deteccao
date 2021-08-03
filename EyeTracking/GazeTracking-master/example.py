@@ -47,6 +47,11 @@ contador = 0
 temp_ini = time.time()  # tempo que começa o programa
 contadorRight = 0
 contadorLeft = 0
+menor_x = 1000
+maior_x = -1000
+lista_tempo = []
+lista_gaze_x = []
+lista_gaze_y = []
 
 if var == True:
     while True:
@@ -82,22 +87,53 @@ if var == True:
         gaze_x = gaze.horizontal_ratio()
         gaze_y = gaze.vertical_ratio()
 
-        if res >= 0.2:
-            contador = contador + 200
+        if res >= 0.1:
+            contador = contador + 100
             if gaze_x != None and gaze_y != None:
+                if gaze_x < menor_x:
+                    menor_x = gaze_x
+
+                if gaze_x > maior_x:
+                    maior_x = gaze_x
+
+                lista_tempo.append(pd.Timedelta(milliseconds=contador))
+                lista_gaze_x.append(gaze_x)
+                lista_gaze_y.append(gaze_y)
+
+                print(f'valor atual -> x:{gaze_x:.3f}\tdir:{gaze_y:.3f}\tmin: {menor_x:.3f}\tmax: {maior_x:.3f}')
                 gaze_x = int(gaze_x * SCREEN_WIDTH)
                 gaze_y = int(gaze_y * SCREEN_HEIGHT)
                 cv2.putText(frame, "Coords: " + str(gaze_x) + "," + str(gaze_y), (90, 130), cv2.FONT_HERSHEY_DUPLEX,
                             0.9, (147, 58, 31), 1)
                 coords.append([pd.Timedelta(milliseconds=contador), gaze_x, gaze_y])
+
+                #print(f'valor atual -> x:{gaze_x}\tdir:{gaze_y}')
             else:
-                print('valor nulo detectado -> x:{gaze_x}\tdir:{gaze_y}')
+                print(f'valor nulo detectado -> x:{gaze_x}\tdir:{gaze_y}')
             temp_ini = ini
-            print('contador: {contador}')
-        print('res:{res} temp_ini:{temp_ini} ini:{ini}')
+            #print(f'contador: {contador}')
+        #print(f'res:{res} temp_ini:{temp_ini} ini:{ini}')
         cv2.imshow("Demo", frame)
+
         if cv2.waitKey(1) == 27:
             break
+        print((lista_gaze_x))
+        print((lista_gaze_x))
+
+        print(min(lista_gaze_x))
+        print(max(lista_gaze_x))
+
+
+        from sklearn.preprocessing import MinMaxScaler
+
+        scaler = MinMaxScaler()
+        scaler = scaler.fit(lista_gaze_x)
+        lista_gaze_x = scaler.transform(lista_gaze_x)
+
+        print(min(lista_gaze_x))
+        print(max(lista_gaze_x))
+
+
 
 
     # time.sleep (1)#delay de 1s

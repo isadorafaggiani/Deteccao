@@ -54,7 +54,7 @@ class Calibration(object):
         average_iris_size = 0.48
         trials = {}
 
-        for threshold in range(5, 100, 5):
+        for threshold in range(5, 100, 1):
             iris_frame = Pupil.image_processing(eye_frame, threshold)
             trials[threshold] = Calibration.iris_size(iris_frame)
 
