@@ -3,4 +3,4 @@ numpy==1.20.2
 opencv-contrib-python==4.5.1.48
 opencv-python==4.5.1.48
 opencv-python-headless==4.5.1.48
-
+dlib == 19.16.0
