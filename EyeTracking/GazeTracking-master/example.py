@@ -1,156 +1,154 @@
-import time
 import cv2
-#import datetime
+import math
 import numpy as np
+import os
 import pandas as pd
-#from matplotlib import pyplot as plt
+import subprocess
+import sys
+import time
 from gaze_tracking import GazeTracking
-import seaborn as sns;
-
+import seaborn as sns
 sns.set_theme()
-#import tkinter
 import plotly.express as px
-from tkinter import *
+import plotly.graph_objects as go
+import tkinter as tk
+from tkinter import filedialog as fd
 
+def get_platform():
+    if sys.platform == 'linux':
+        try:
+            proc_version = open('/proc/version').read()
+            if 'Microsoft' in proc_version:
+                return 'wsl'
+        except:
+            pass
+    return sys.platform
 
-root = Tk()
-root.title('EYE TRACKING')
-root.geometry('300x200')
-root.configure(background="#BDE8EF")
-# root.withdraw() # verificar se eh necessario
-SCREEN_WIDTH, SCREEN_HEIGHT = root.winfo_screenwidth(), root.winfo_screenheight()
-# print(f'SCREEN_WIDTH = {SCREEN_WIDTH}')
-# print(f'SCREEN_HEIGHT = {SCREEN_HEIGHT}')
+def open_with_default_app(filename):
+    platform = get_platform()
+    if platform == 'darwin':
+        subprocess.call(('open', filename))
+    elif platform in ['win64', 'win32']:
+        os.startfile(filename.replace('/', '\\'))
+    elif platform == 'wsl':
+        subprocess.call('cmd.exe /C start'.split() + [filename])
+    else:                                   # linux variants
+        subprocess.call(('xdg-open', filename))
 
-var = False
+def get_video_duration(filename):
+    # create video capture object
+    data = cv2.VideoCapture(filename)
+    # count the number of frames
+    frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
+    fps = int(data.get(cv2.CAP_PROP_FPS))
+    # calculate duration of the video
+    seconds = int(math.ceil(frames / fps))
+    return seconds
 
+# create the root window
+root = tk.Tk()
+SCREEN_WIDTH = root.winfo_screenwidth()
+SCREEN_HEIGHT = root.winfo_screenheight()
+root.withdraw()
 
-def botao():
-    global var
-    var = True
-    root.quit()
+filetypes = (
+	('Arquivos de video', '*.avi *.mov *.mp4 *.mpeg *.mpg'),
+	('Todos os arquivos', '*.*')
+)
 
+filename = fd.askopenfilename(
+	title='Abrir um arquivo',
+	initialdir='/',
+	filetypes=filetypes)
 
-start_btnRedondo = PhotoImage(file='button.png')
-img_label = Button(image=start_btnRedondo, background="#BDE8EF", borderwidth=0, command=botao)
-img_label.pack(pady=30)
-root.mainloop()
-
-coords = []
-
+print(f'Initializing gaze tracking.')
 gaze = GazeTracking()
 webcam = cv2.VideoCapture(0)
 
+start_delay = 3 # seconds
+print(f'Video will start in {start_delay} seconds.')
+time.sleep(start_delay)
+open_with_default_app(filename)
+duration = get_video_duration(filename)
+
+coords = []
 time_results = []
 res = 0
 contador = 0
 temp_ini = time.time()  # tempo que começa o programa
 contadorRight = 0
 contadorLeft = 0
-menor_x = 1000
-maior_x = -1000
+menor_x = 5000
+maior_x = -5000
 lista_tempo = []
 lista_gaze_x = []
 lista_gaze_y = []
 
-if var == True:
-    while True:
+start_time = time.time()
+print('Main loop started.')
 
-        ini = time.time()  # inicia tempo dentro do while
-        res = ini - temp_ini  # diferença do tempo inicial e o tempo dentro do while
-        time_results.append(res)  # colocar res no vetor
-        # We get a new frame from the webcam
-        _, frame = webcam.read()
+while True:
 
-        # We send this frame to GazeTracking to analyze it
-        gaze.refresh(frame)
+    current_time = time.time()
+    elapsed_time = current_time - start_time
 
-        frame = gaze.annotated_frame()
-        text = ""
+    ini = time.time()  # inicia tempo dentro do while
+    res = ini - temp_ini  # diferença do tempo inicial e o tempo dentro do while
+    time_results.append(res)  # colocar res no vetor
+    # We get a new frame from the webcam
+    _, frame = webcam.read()
 
-        if gaze.is_blinking():
-            text = "Blinking"
-        elif gaze.is_right():
-            text = "Looking right"
-            contadorRight += 1
+    # We send this frame to GazeTracking to analyze it
+    gaze.refresh(frame)
 
+    frame = gaze.annotated_frame()
+    text = ""
 
-        elif gaze.is_left():
-            text = "Looking left"
-            contadorLeft += 1
+    if gaze.is_blinking():
+        text = "Blinking"
+    elif gaze.is_right():
+        text = "Looking right"
+        contadorRight += 1
+    elif gaze.is_left():
+        text = "Looking left"
+        contadorLeft += 1
+    elif gaze.is_center():
+        text = "Looking center"
 
+    cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
+    gaze_x = gaze.horizontal_ratio()
+    gaze_y = gaze.vertical_ratio()
 
-        elif gaze.is_center():
-            text = "Looking center"
+    if res >= 0.1:
+        contador = contador + 100
+        if gaze_x != None and gaze_y != None:
+            if gaze_x < menor_x:
+                menor_x = gaze_x
 
-        cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
-        gaze_x = gaze.horizontal_ratio()
-        gaze_y = gaze.vertical_ratio()
+            if gaze_x > maior_x:
+                maior_x = gaze_x
 
-        if res >= 0.1:
-            contador = contador + 100
-            if gaze_x != None and gaze_y != None:
-                if gaze_x < menor_x:
-                    menor_x = gaze_x
+            lista_tempo.append(pd.Timedelta(milliseconds=contador))
+            lista_gaze_x.append(gaze_x)
+            lista_gaze_y.append(gaze_y)
 
-                if gaze_x > maior_x:
-                    maior_x = gaze_x
+            print(f'x = {gaze_x:.3f} (min = {menor_x:.3f}, max = {maior_x:.3f})\ty = {gaze_y:.3f}')
+            gaze_x = int(gaze_x * SCREEN_WIDTH)
+            gaze_y = int(gaze_y * SCREEN_HEIGHT)
+            coords.append([pd.Timedelta(milliseconds=contador), gaze_x, gaze_y])
 
-                lista_tempo.append(pd.Timedelta(milliseconds=contador))
-                lista_gaze_x.append(gaze_x)
-                lista_gaze_y.append(gaze_y)
-
-                print(f'valor atual -> x:{gaze_x:.3f}\tdir:{gaze_y:.3f}\tmin: {menor_x:.3f}\tmax: {maior_x:.3f}')
-                gaze_x = int(gaze_x * SCREEN_WIDTH)
-                gaze_y = int(gaze_y * SCREEN_HEIGHT)
-                cv2.putText(frame, "Coords: " + str(gaze_x) + "," + str(gaze_y), (90, 130), cv2.FONT_HERSHEY_DUPLEX,
-                            0.9, (147, 58, 31), 1)
-                coords.append([pd.Timedelta(milliseconds=contador), gaze_x, gaze_y])
-
-                #print(f'valor atual -> x:{gaze_x}\tdir:{gaze_y}')
-            else:
-                print(f'valor nulo detectado -> x:{gaze_x}\tdir:{gaze_y}')
-            temp_ini = ini
-            #print(f'contador: {contador}')
-        #print(f'res:{res} temp_ini:{temp_ini} ini:{ini}')
-        cv2.imshow("Demo", frame)
-
-        if cv2.waitKey(1) == 27:
+        if elapsed_time > duration:
+            print(f'Main loop finished after {str(int(elapsed_time))} seconds.')
             break
-        print((lista_gaze_x))
-        print((lista_gaze_x))
 
-        print(min(lista_gaze_x))
-        print(max(lista_gaze_x))
+print('Showing heatmap.')
+df = pd.DataFrame(coords, columns=['time', 'gaze_x', 'gaze_y'])
+colors = np.random.rand(len(coords))
+fig = px.density_heatmap(df, x="gaze_x", y="gaze_y", nbinsx = 50, nbinsy=50)
+fig.show()
 
-
-        from sklearn.preprocessing import MinMaxScaler
-
-        scaler = MinMaxScaler()
-        scaler = scaler.fit(lista_gaze_x)
-        lista_gaze_x = scaler.transform(lista_gaze_x)
-
-        print(min(lista_gaze_x))
-        print(max(lista_gaze_x))
-
-
-
-
-    # time.sleep (1)#delay de 1s
-
-
-    df = pd.DataFrame(coords, columns=['time', 'gaze_x', 'gaze_y'])
-    colors = np.random.rand(len(coords))
-    fig = px.density_heatmap(df, x="gaze_x", y="gaze_y", nbinsx = 50, nbinsy=50)
-    fig.show()
-
-    import plotly.graph_objects  as  go
-
-    labels = ['Left_Gaze', 'Right_Gaze']
-    values = [contadorLeft, contadorRight]
-
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
-    fig.show()
-
-else:
-    print("nao roda")
+print('Showing pizza plot.')
+labels = ['Left_Gaze', 'Right_Gaze']
+values = [contadorLeft, contadorRight]
+fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
+fig.show()
