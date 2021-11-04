@@ -45,12 +45,13 @@ def get_video_duration(filename):
     seconds = int(math.ceil(frames / fps))
     return seconds
 
-def captura(escala):
+def capturar():
     # create the root window
     root = tk.Tk()
     SCREEN_WIDTH = root.winfo_screenwidth()
     SCREEN_HEIGHT = root.winfo_screenheight()
     root.withdraw()
+    print('oi')
 
     filetypes = (
         ('Arquivos de video', '*.avi *.mov *.mp4 *.mpeg *.mpg'),
