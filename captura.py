@@ -13,6 +13,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import tkinter as tk
 from tkinter import filedialog as fd
+from datetime import datetime, timedelta
+import json
+
+def default(o):
+    if isinstance(o, (timedelta)):
+        return o / timedelta(milliseconds=1) # in millis
 
 def get_platform():
     if sys.platform == 'linux':
@@ -46,6 +52,7 @@ def get_video_duration(filename):
     return seconds
 
 def capturar():
+    print('capturar')
     # create the root window
     root = tk.Tk()
     SCREEN_WIDTH = root.winfo_screenwidth()
@@ -58,10 +65,10 @@ def capturar():
         ('Todos os arquivos', '*.*')
     )
 
-    filename = fd.askopenfilename(
-        title='Abrir um arquivo',
-        initialdir='/',
-        filetypes=filetypes)
+    #filename = fd.askopenfilename(
+    #    title='Abrir um arquivo',
+    #    initialdir='/',
+    #    filetypes=filetypes)
 
     print(f'Initializing gaze tracking.')
     gaze = GazeTracking()
@@ -70,79 +77,43 @@ def capturar():
     start_delay = 3 # seconds
     print(f'Video will start in {start_delay} seconds.')
     time.sleep(start_delay)
+    filename = '/Users/marcelocysneiros/git/Deteccao/Video_Exemplo.mp4'
     open_with_default_app(filename)
-    cv2.setWindowProperty(filename, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    #cv2.setWindowProperty(filename, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     duration = get_video_duration(filename)
-
     coords = []
-    time_results = []
-    res = 0
-    contador = 0
-    temp_ini = time.time()  # tempo que começa o programa
-    contadorRight = 0
-    contadorLeft = 0
-    menor_x = 5000
-    maior_x = -5000
-    lista_tempo = []
-    lista_gaze_x = []
-    lista_gaze_y = []
 
-    start_time = time.time()
-    print('Main loop started.')
+    start_time = datetime.now()
+    print(f'Main loop started (duration = {duration}).')
 
     while True:
 
-        current_time = time.time()
-        elapsed_time = current_time - start_time
-
-        ini = time.time()  # inicia tempo dentro do while
-        res = ini - temp_ini  # diferença do tempo inicial e o tempo dentro do while
-        time_results.append(res)  # colocar res no vetor
         # We get a new frame from the webcam
+        current_time = datetime.now()
         _, frame = webcam.read()
+        time_delta = current_time - start_time
 
         # We send this frame to GazeTracking to analyze it
         gaze.refresh(frame)
 
-        frame = gaze.annotated_frame()
-        text = ""
+        gaze_x_ratio = gaze.horizontal_ratio()
+        gaze_y_ratio = gaze.vertical_ratio()
 
-        if gaze.is_blinking():
-            text = "Blinking"
-        elif gaze.is_right():
-            text = "Looking right"
-            contadorRight += 1
-        elif gaze.is_left():
-            text = "Looking left"
-            contadorLeft += 1
-        elif gaze.is_center():
-            text = "Looking center"
+        if time_delta > timedelta(milliseconds=100):
+            
+            if gaze_x_ratio != None and gaze_y_ratio != None:
 
-        cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
-        gaze_x = gaze.horizontal_ratio()
-        gaze_y = gaze.vertical_ratio()
+                gaze_x = int(gaze_x_ratio * SCREEN_WIDTH)
+                gaze_y = int(gaze_y_ratio * SCREEN_HEIGHT)
 
+                print(f'{time_delta}\tx = {gaze_x:.3f} ({gaze_x_ratio:.3f})\ty = {gaze_y:.3f} ({gaze_y_ratio:.3f})')
 
-        if res >= 0.1:
-            contador = contador + 100
-            if gaze_x != None and gaze_y != None:
-                if gaze_x < menor_x:
-                    menor_x = gaze_x
+                coords.append([time_delta, gaze_x, gaze_y])
 
-                if gaze_x > maior_x:
-                    maior_x = gaze_x
-
-                lista_tempo.append(pd.Timedelta(milliseconds=contador))
-                lista_gaze_x.append(gaze_x)
-                lista_gaze_y.append(gaze_y)
-
-                print(f'x = {gaze_x:.3f} (min = {menor_x:.3f}, max = {maior_x:.3f})\ty = {gaze_y:.3f}')
-                gaze_x = int(gaze_x * SCREEN_WIDTH)
-                gaze_y = int(gaze_y * SCREEN_HEIGHT)
-                coords.append([pd.Timedelta(milliseconds=contador), gaze_x, gaze_y])
-
-            if elapsed_time > duration:
-                print(f'Main loop finished after {str(int(elapsed_time))} seconds.')
+            if time_delta > timedelta(seconds = duration):
+                print(f'Main loop finished after {time_delta}.')
                 break
 
+    with open("cache/captura.json", 'w') as f:
+        json.dump(coords, f, indent=2, default=default)
     return coords

@@ -12,8 +12,6 @@ def escalonamento(escala, coords):
 	scaler = MinMaxScaler(feature_range=(y_min, y_max))
 	data_y = scaler.fit_transform(data_y)
 
-	# repetir oS processoS para o outro olho
-
 	coords['gaze_x'] = data_x
 	coords['gaze_y'] = data_y
 

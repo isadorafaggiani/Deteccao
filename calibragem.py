@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import time
 from gaze_tracking import GazeTracking
+import json
 
 def capturar_cantos():
     print(f'entrou no metodo capturar_cantos()')
@@ -107,4 +108,7 @@ def calibrar():
     lista_gaze_x,lista_gaze_y = capturar_cantos()
     x_min,x_max = obter_limites(lista_gaze_x)
     y_min,y_max = obter_limites(lista_gaze_y)
-    return x_min,x_max,y_min,y_max
+    ans = x_min,x_max,y_min,y_max
+    with open("cache/calibragem.json", 'w') as f:
+        json.dump(ans, f, indent=2)
+    return ans
