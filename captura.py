@@ -51,7 +51,7 @@ def capturar():
     SCREEN_WIDTH = root.winfo_screenwidth()
     SCREEN_HEIGHT = root.winfo_screenheight()
     root.withdraw()
-    print('oi')
+    #print('oi')
 
     filetypes = (
         ('Arquivos de video', '*.avi *.mov *.mp4 *.mpeg *.mpg'),
@@ -71,6 +71,7 @@ def capturar():
     print(f'Video will start in {start_delay} seconds.')
     time.sleep(start_delay)
     open_with_default_app(filename)
+    cv2.setWindowProperty(filename, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     duration = get_video_duration(filename)
 
     coords = []
@@ -120,6 +121,7 @@ def capturar():
         cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
         gaze_x = gaze.horizontal_ratio()
         gaze_y = gaze.vertical_ratio()
+
 
         if res >= 0.1:
             contador = contador + 100
