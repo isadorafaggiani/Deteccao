@@ -79,6 +79,10 @@ def capturar_cantos():
             
             time.sleep(0.1)
 
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            print(f'Main loop finished after {str(int(elapsed_time))} seconds.')
+            break
+
     webcam.release()
     cv2.destroyAllWindows()
 
