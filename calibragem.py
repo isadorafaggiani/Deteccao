@@ -3,8 +3,14 @@ import numpy as np
 import time
 from gaze_tracking import GazeTracking
 import json
+import tkinter
 
-def capturar_cantos():
+def obter_resolucao_tela():
+    root = tkinter.Tk()
+    root.withdraw()
+    return root.winfo_screenwidth(), root.winfo_screenheight()
+
+def capturar_cantos_webcam():
     print(f'entrou no metodo capturar_cantos()')
 	
     print(f'Initializing calibration.')
@@ -89,7 +95,7 @@ def capturar_cantos():
 
     return lista_gaze_x,lista_gaze_y
 
-def obter_limites(vet,qtd=3):
+def obter_limites_webcam(vet,qtd=3):
     print(f'entrou no metodo obter_limites()')
     # ordenar o vetor de forma crescente
     vet.sort()
@@ -105,10 +111,11 @@ def obter_limites(vet,qtd=3):
 
 def calibrar():
     print(f'entrou no metodo calibragem()')
-    lista_gaze_x,lista_gaze_y = capturar_cantos()
-    x_min,x_max = obter_limites(lista_gaze_x)
-    y_min,y_max = obter_limites(lista_gaze_y)
-    ans = x_min,x_max,y_min,y_max
+    lista_gaze_x,lista_gaze_y = capturar_cantos_webcam()
+    x_min,x_max = obter_limites_webcam(lista_gaze_x)
+    y_min,y_max = obter_limites_webcam(lista_gaze_y)
+    width,height = obter_resolucao_tela()
+    ans = x_min,x_max,y_min,y_max,0,width,0,height
     with open("cache/calibragem.json", 'w') as f:
         json.dump(ans, f, indent=2)
     return ans
