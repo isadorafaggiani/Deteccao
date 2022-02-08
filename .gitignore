@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 /exemplo_foto.jpg
 /Video_ET.mp4
+*/.idea/
