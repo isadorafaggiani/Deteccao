@@ -77,7 +77,7 @@ def capturar_cantos_webcam():
 
             if curr_pos != last_pos:
                 print(f'desenhando')
-                cv2.imshow(window_name, cv2.imread(f'img_{curr_pos}.png'))
+                cv2.imshow(window_name, cv2.imread(f'./assets/img_{curr_pos}.png'))
 
             print(f'elapsed_time = {elapsed_time} last_pos = {last_pos} curr_pos = {curr_pos}')
 

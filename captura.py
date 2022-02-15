@@ -77,7 +77,7 @@ def capturar():
     start_delay = 3 # seconds
     print(f'Video will start in {start_delay} seconds.')
     time.sleep(start_delay)
-    filename = './Video_Exemplo.mp4'
+    filename = './assets/Video_Exemplo.mp4'
     open_with_default_app(filename)
     #cv2.setWindowProperty(filename, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     duration = get_video_duration(filename)
