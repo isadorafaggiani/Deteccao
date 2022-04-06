@@ -19,7 +19,6 @@ def escalonar(escala, coords):
     data_x = data_x[:,0]#Volta o array de duas dimensões pra um array simples
     print(f'DataX:{data_x}')#Mostra a lista de x escalonado
 
-    #TODO: repetir o processo para y
     data_y = coords[:, 2]
     scaler = MinMaxScaler(feature_range=(y_min, y_max))
     data_y = data_y.reshape(-1, 1)#Transforma o array original em duas dimensões pq a função pede
@@ -32,5 +31,5 @@ def escalonar(escala, coords):
     coords[:, 2] = data_y
 
     with open("cache/escalonamento.json", 'w') as f:
-        json.dump(coords.tolist(), f, indent=2)
+        json.dump(coords.tolist(), f, indent=2, default=default)
     return coords

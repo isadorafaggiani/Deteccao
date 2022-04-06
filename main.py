@@ -19,8 +19,8 @@ if __name__ == '__main__':
 		resultado_calibragem = calibragem.calibrar()
 	escala_webcam = resultado_calibragem[:4]
 	resolucao_tela = resultado_calibragem[4:]
-	print(f'escala_webcam = {escala_webcam}')
-	print(f'resolucao_tela = {resolucao_tela}')
+	# print(f'escala_webcam = {escala_webcam}')
+	# print(f'resolucao_tela = {resolucao_tela}')
 
 	# captura
 	if ('-c' in sys.argv or '--cache' in sys.argv) and Path(CACHE_CAPTURA).exists():
@@ -30,19 +30,20 @@ if __name__ == '__main__':
 	else:
 		print('Realizando nova captura...')
 		coords = captura.capturar()
-	print(f'coords(cap) = {coords}')
+	# print(f'coords(cap) = {coords}')
 
 	# escalonamento
 	if ('-c' in sys.argv or '--cache' in sys.argv) and Path(CACHE_ESCALONAMENTO).exists():
 		print('Tentando obter escalonamento do cache...')
 		with open(CACHE_ESCALONAMENTO, 'r') as f:
-			coords = json.load(f)
+			coords = json.load(f)		
 	else:
 		print('Realizando novo escalonamento...')
 		coords = escalonamento.escalonar(escala_webcam, coords)
-		print(f'coords(esc) = {coords}')
+		# print(f'coords(esc) = {coords}')
 		coords = escalonamento.escalonar(resolucao_tela, coords)
-		print(f'coords(tela) = {coords}')
+		# print(f'coords(tela) = {coords}')
 	
 	# exibicao
+	print('Exibindo mapa de calor...')
 	exibicao.exibir(coords)
